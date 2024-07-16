@@ -27,13 +27,26 @@ void handle_client(int client_socket) {
   if (strcmp(method, "GET") == 0) {
     FILE *file = fopen(path, "rb");
     if (file) {
-      FILE *html = fopen("./index.html", "rb");
-      char my_html[BUFFER_SIZE];
+      FILE *html = fopen("./index.html", "r");
+      char *my_html = (char *)malloc(BUFFER_SIZE);
 
       strcpy(response, "HTTP/1.1 200 OK\nContent-Type: text/html\n\n");
-      while (fgets(my_html, BUFFER_SIZE, html)) {
-        strcat(response, my_html);
+      size_t buffer_read = 0;
+      int c;
+      while ((c = fgetc(html)) != EOF) {
+        if (buffer_read >= BUFFER_SIZE) {
+          my_html = (char *)realloc(my_html, buffer_read + 10);
+          if (!my_html) {
+            perror("Memory allocation failed");
+            fclose(html);
+            return;
+          }
+        }
+        my_html[buffer_read++] = c;
       }
+
+      my_html[buffer_read] = '\0'; // NULL
+
       int bytes_read;
       while ((bytes_read = fread(response + strlen(response), 1,
                                  BUFFER_SIZE - strlen(response), file)) > 0) {
@@ -41,6 +54,7 @@ void handle_client(int client_socket) {
       }
       fclose(html);
       fclose(file);
+      free(my_html);
     } else {
       sprintf(response,
               "HTTP/1.1 404 Not Found\nContent-Type: text/plain\n\nNot Found");
