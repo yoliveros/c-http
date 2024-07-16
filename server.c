@@ -27,7 +27,7 @@ void handle_client(int client_socket) {
   if (strcmp(method, "GET") == 0) {
     FILE *file = fopen(path, "rb");
     if (file) {
-      FILE *html = fopen("./index.html", "r");
+      FILE *html = fopen("src/index.html", "r");
       char *my_html = (char *)malloc(BUFFER_SIZE);
 
       strcpy(response, "HTTP/1.1 200 OK\nContent-Type: text/html\n\n");
@@ -46,6 +46,7 @@ void handle_client(int client_socket) {
       }
 
       my_html[buffer_read] = '\0'; // NULL
+      strcat(response, my_html);
 
       int bytes_read;
       while ((bytes_read = fread(response + strlen(response), 1,

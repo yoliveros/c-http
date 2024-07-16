@@ -2,16 +2,30 @@
 
 <head>
   <title>C HTTP</title>
-  <link rel="stylesheet" href="index.css" />
+  <link rel="stylesheet" href="./index.css">
+  <style>
+    button {
+      border: 0;
+      border-radius: 5px;
+      color: #FFF;
+      background-color: #FF00FF;
+    }
+  </style>
 </head>
 
 <body>
   <h1>HTTP</h1>
   Super HTTP server made in C
 
-  <button onclick="show_alert()"></button>
+  <button onclick="show_alert()">Show Alert</button>
 
-  <script src="index.js"></script>
+  <script>
+    function show_alert() {
+      alert("JS working")
+    }
+  </script>
+
+  <script src="./index.js"></script>
 </body>
 
 </html>
