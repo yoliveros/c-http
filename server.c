@@ -22,43 +22,97 @@ void handle_client(int client_socket) {
 
   char *method = strtok(request, " ");
   char *path = strtok(NULL, " ");
-
   char response[BUFFER_SIZE];
   if (strcmp(method, "GET") == 0) {
-    FILE *file = fopen(path, "rb");
-    if (file) {
-      FILE *html = fopen("src/index.html", "r");
-      char *my_html = (char *)malloc(BUFFER_SIZE);
+    if (strcmp(path, "/") == 0) {
+      FILE *file = fopen(path, "rb");
+      if (file) {
+        FILE *html = fopen("src/index.html", "r");
+        char *my_html = (char *)malloc(BUFFER_SIZE);
 
-      strcpy(response, "HTTP/1.1 200 OK\nContent-Type: text/html\n\n");
+        strcpy(response, "HTTP/1.1 200 OK\nContent-Type: text/html\n\n");
+
+        size_t buffer_read = 0;
+        int c;
+        while ((c = fgetc(html)) != EOF) {
+          if (buffer_read >= BUFFER_SIZE) {
+            my_html = (char *)realloc(my_html, buffer_read + 10);
+            if (!my_html) {
+              perror("Memory allocation failed");
+              fclose(html);
+              return;
+            }
+          }
+          my_html[buffer_read++] = c;
+        }
+
+        my_html[buffer_read] = '\0'; // NULL
+        strcat(response, my_html);
+
+        int bytes_read;
+        while ((bytes_read = fread(response + strlen(response), 1,
+                                   BUFFER_SIZE - strlen(response), file)) > 0) {
+          // nose
+        }
+        fclose(html);
+        free(my_html);
+        fclose(file);
+      } else {
+        sprintf(
+            response,
+            "HTTP/1.1 404 Not Found\nContent-Type: text/plain\n\nNot Found");
+      }
+    } else if (strcmp(path, "/index.css") == 0) {
+      FILE *css = fopen("src/index.css", "rb");
+      char *my_css = (char *)malloc(BUFFER_SIZE);
+
+      strcpy(response, "HTTP/1.1 200 OK\nContent-Type: text/css\n\n");
+
       size_t buffer_read = 0;
       int c;
-      while ((c = fgetc(html)) != EOF) {
+      while ((c = fgetc(css)) != EOF) {
         if (buffer_read >= BUFFER_SIZE) {
-          my_html = (char *)realloc(my_html, buffer_read + 10);
-          if (!my_html) {
+          my_css = (char *)realloc(my_css, buffer_read + 10);
+          if (!my_css) {
             perror("Memory allocation failed");
-            fclose(html);
+            fclose(css);
             return;
           }
         }
-        my_html[buffer_read++] = c;
+        my_css[buffer_read++] = c;
       }
 
-      my_html[buffer_read] = '\0'; // NULL
-      strcat(response, my_html);
+      my_css[buffer_read] = '\0'; // NULL
+      strcat(response, my_css);
 
-      int bytes_read;
-      while ((bytes_read = fread(response + strlen(response), 1,
-                                 BUFFER_SIZE - strlen(response), file)) > 0) {
-        // nose
+      fclose(css);
+      free(my_css);
+    } else if (strcmp(path, "/index.js") == 0) {
+      FILE *js = fopen("src/index.js", "rb");
+      char *my_js = (char *)malloc(BUFFER_SIZE);
+
+      strcpy(response,
+             "HTTP/1.1 200 OK\nContent-Type: application/javascript\n\n");
+
+      size_t buffer_read = 0;
+      int c;
+      while ((c = fgetc(js)) != EOF) {
+        if (buffer_read >= BUFFER_SIZE) {
+          my_js = (char *)realloc(my_js, buffer_read + 10);
+          if (!my_js) {
+            perror("Memory allocation failed");
+            fclose(js);
+            return;
+          }
+        }
+        my_js[buffer_read++] = c;
       }
-      fclose(html);
-      fclose(file);
-      free(my_html);
-    } else {
-      sprintf(response,
-              "HTTP/1.1 404 Not Found\nContent-Type: text/plain\n\nNot Found");
+
+      my_js[buffer_read] = '\0'; // NULL
+      strcat(response, my_js);
+
+      fclose(js);
+      free(my_js);
     }
   } else {
     sprintf(response, "HTTP/1.1 501 Not Implemented\nContent-Type: "
